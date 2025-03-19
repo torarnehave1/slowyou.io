@@ -2,6 +2,7 @@ import express from 'express';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import fs from 'fs';
 import emailTemplates from '../public/languages/nb.json' with { type: 'json' };
 
 dotenv.config();
@@ -25,6 +26,10 @@ router.post('/reg-user-vegvisr', async (req, res) => {
     },
   });
 
+  const svgContent = fs.readFileSync('public/images/logo.svg');
+  const base64Image = Buffer.from(svgContent).toString('base64');
+  const logoDataUrl = `data:image/svg+xml;base64,${base64Image}`;
+
   const mailOptions = {
     from: 'vegvisr.org@gmail.com',
     to: email,
@@ -34,15 +39,8 @@ router.post('/reg-user-vegvisr', async (req, res) => {
       `https://slowyou.net/a/verify-email?token=${emailVerificationToken}`
     ).replace(
       'https://slowyou.io/images/logo.svg',
-      'cid:vegvisr-logo'
+      logoDataUrl
     ),
-    attachments: [
-      {
-        filename: 'logo.svg',
-        path: 'https://slowyou.io/images/logo.svg', // Direct URL works with Nodemailer
-        cid: 'vegvisr-logo', // Must match the CID in the HTML
-      },
-    ],
   };
 
   try {
