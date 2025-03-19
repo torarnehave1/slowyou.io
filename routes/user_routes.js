@@ -34,13 +34,16 @@ router.post('/reg-user-vegvisr', async (req, res) => {
     from: 'vegvisr.org@gmail.com',
     to: email,
     subject: emailTemplates.emailvegvisrorg.verification.subject,
-    html: emailTemplates.emailvegvisrorg.verification.body.replace(
-      '{verificationLink}',
-      `https://slowyou.net/a/verify-email?token=${emailVerificationToken}`
-    ).replace(
-      'https://slowyou.io/images/logo.svg',
-      logoDataUrl
-    ),
+    html: `
+      <html>
+        <body>
+          <p>Hei,</p>
+          <p>Velkommen til Vegvisr.org! Klikk her for å bekrefte: <a href="https://slowyou.net/a/verify-email?token=${emailVerificationToken}">Bekreft e-post</a></p>
+          <p>Med retning og klarhet,<br>Vegvisr.org-teamet</p>
+          <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCI+PHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSJyZWQiLz48L3N2Zz4=" alt="Test Logo" style="max-width: 50px;" />
+        </body>
+      </html>
+    `,
   };
 
   try {
