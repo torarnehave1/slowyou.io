@@ -1,0 +1,57 @@
+{
+    "email": {
+        "verification": {
+            "subject": "Bekreft din e-postadresse",
+            "body": "Hei,\n\nTakk for at du registrerte deg hos oss. Vennligst klikk på lenken nedenfor for å bekrefte din e-postadresse:\n\n{verificationLink}\n\nHvis du ikke har bedt om denne e-posten, kan du trygt ignorere den.\n\nVennlig hilsen,\nDitt Team"
+        },
+        "welcome": {
+            "subject": "Velkommen til vår tjeneste",
+            "body": "Hei,\n\nVi er glade for å ha deg med oss. La oss komme i gang!\n\nVennlig hilsen,\nDitt Team"
+        }
+    },
+    "emailvegvisrorg": {
+    "verification": {
+        "subject": "Bekreft din reise med Vegvisr.org",
+        "body": "Hei,\n\nVelkommen til Vegvisr.org! Du har tatt det første steget på en vei av utforskning, visdom og fellesskap. For å bekrefte din e-postadresse og aktivere din konto, vennligst klikk på lenken nedenfor:\n\n{verificationLink}\n\nHvis du ikke har bedt om denne e-posten, kan du trygt ignorere den.\n\nMed retning og klarhet,\nVegvisr.org-teamet"
+    },
+    "welcome": {
+        "subject": "Velkommen til Vegvisr.org – Naviger din vei",
+        "body": "Hei,\n\nVi ønsker deg velkommen til Vegvisr.org! Her utforsker vi sammen hvordan visdom, retning og fellesskap kan veilede oss på vår reise.\n\nFor å komme i gang, kan du:\n🔹 Utforske vårt kunnskapssenter og filosofiske prinsipper.\n🔹 Delta i diskusjoner og dele dine innsikter.\n🔹 Praktisere mantraer, bevegelse og esoteriske metoder i fellesskap.\n\nLa oss sammen navigere mot innsikt og transformasjon!\n\nMed styrke og balanse,\nVegvisr.org-teamet"
+    }
+
+    }, 
+    "pageTitle": "SlowYou Kunngjøringer",
+    "emailLabel": "E-post:",
+    "passwordLabel": "Passord:",
+    "confirmPasswordLabel": "Bekreft Passord:",
+    "securityMessage": "Ditt passord lagres ikke som klartekst. I stedet blir det transformert ved bruk av sterk krypteringsteknikk, noe som gjør det uleselig og sikrer at det lagres sikkert. Dette betyr at selv om noen får tilgang til de lagrede dataene, kan de ikke se ditt faktiske passord.",
+    "submitButton": "Registrer",
+    "loginTitle": "Logg Inn",
+    "usernameLabel": "Brukernavn:",
+    "fullNameLabel": "Fullt Navn:",
+    "loginButton": "Logg Inn",
+    "forgotPasswordTitle": "Glemt passord",
+    "forgotPasswordLink": "Glemt passord?",
+    "pageTitleUserReg": "Brukerregistrering",
+    "sendResetLinkButton": "Send reset link",
+    "announcementTitle": "SlowYou",
+    "navHome": "Hjem",
+    "navFeatures": "Tjenester",
+    "navPricing": "Priser",
+    "navFAQs": "FAQ",
+    "navAbout": "Om",
+    "navCalender": "SlowYou™ Kalender",
+    "signupButton": "Registrer deg",
+    "announcementMainTitle": "Kunngjøringer",
+    "announcementSubtitle": "",
+    "announcementText": "Estetisk Forskning Undersøkelser\nHei alle sammen,\nVi starter et nytt forskningsprosjekt for å utforske opprinnelsen til skjønnhet... I bunn og grunn, når finner vi noe kollektivt vakkert, og når ser vi hver enkelt skjønnhet forskjellig?\nVi gjør dette ved å sammenligne de personaliserte modellene folk lager med svarene i flere nye undersøkelser.\nDen første undersøkelsen handler om demografi, hvordan påvirker ting som alder, kjønn, land, etc hva vi finner vakkert?\nTa undersøkelsen på slowyou.com/surveys.",
+    "maintitlefirstpage": "SlowYou™",
+    "forgotpasswordtitle": "Glemt Passord",
+    "forgotpasswordlink": "Glemt Passord",
+    "heroTitle": "Enkel Væren, Samskapende liv.",
+    "heroSubtitle": "Reisen Innover",
+    "heroText1": "«Enkel Væren, Samskapende liv» er mer enn et prinsipp; det er en måte å leve på. Det inviterer deg til å tre inn i en verden hvor hver handling er fylt med mening, og hvert øyeblikk er en mulighet for vekst og glede. Det kaller deg til et liv hvor du ikke lenger er en tilskuer, men en levende deltaker i skapelsens dans.",
+    "heroText2": "Denne filosofien ber deg ikke om å endre hvem du er, men om å bli dypere det du virkelig er—et vesen av lys, kjærlighet og uendelig potensiale. Når du blar gjennom sidene på denne nettsiden og i ditt liv, husk at veien til en grenseløs eksistens ligger i den enkle anstrengelsen av å være tro mot din natur. La denne kunnskapen lede deg mens du navigerer i verdens kompleksiteter med eleganse og ynde, og omfavner den grenseløse gleden ved simpelthen å være.",
+    "learnMoreButton": "Lær Mer",
+    "titlelanguage": "Velg Språk:"
+}
