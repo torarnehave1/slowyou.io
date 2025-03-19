@@ -12,7 +12,7 @@
     "emailvegvisrorg": {
         "verification": {
     "subject": "Bekreft din reise med Vegvisr.org",
-    "body": "<html><body><p>Hei,</p><p>Velkommen til Vegvisr.org! Du har tatt det første steget på en vei av utforskning, visdom og fellesskap. For å bekrefte din e-postadresse og aktivere din konto, vennligst klikk på lenken nedenfor:</p><p><a href=\"{verificationLink}\">Bekreft e-post</a></p><p>Hvis du ikke har bedt om denne e-posten, kan du trygt ignorere den.</p><p>Med retning og klarhet,<br>Vegvisr.org-teamet</p><img src=\"https://slowyou.io/images/logo.svg\" alt=\"Vegvisr.org Logo\" style=\"max-width: 200px;\" /></body></html>"
+    "body": "<html><body><p>Hei,</p><p>Velkommen til Vegvisr.org! Du har tatt det første steget på en vei av utforskning, visdom og fellesskap. For å bekrefte din e-postadresse og aktivere din konto, vennligst klikk på lenken nedenfor:</p><p><a href=\"{verificationLink}\">Bekreft e-post</a></p><p>Hvis du ikke har bedt om denne e-posten, kan du trygt ignorere den.</p><p>Med retning og klarhet,<br>Vegvisr.org-teamet</p><img src=\"https://slowyou.io/images/tah.png\" alt=\"Vegvisr.org Logo\" style=\"max-width: 200px;\" /></body></html>"
 },
         "welcome": {
             "subject": "Velkommen til Vegvisr.org – Naviger din vei",
