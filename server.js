@@ -2,14 +2,25 @@
 import express from 'express';
 import cors from 'cors';
 import userRoutes from './routes/user_routes.js';
+import path from 'path';
+import { fileURLToPath } from 'url'; 
 
 const app = express();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(cors()); // Enable CORS if external servers need to call your API
 app.use(express.json()); // To parse JSON bodies
 
 // Mount your auth routes (adjust the path as needed)
 app.use('/api', userRoutes);
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  });
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
