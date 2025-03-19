@@ -1,14 +1,7 @@
-// routes/auth.js
-import express from 'express';
-import crypto from 'crypto';
 import nodemailer from 'nodemailer';
-import MailComposer from 'nodemailer/lib/mail-composer/index.js'; // Explicit path for ES6
 import dotenv from 'dotenv';
-import emailTemplates from '../public/languages/nb.json' with { type: 'json' }; // Adjust path as needed
 
 dotenv.config();
-
-const router = express.Router();
 
 const transporter = nodemailer.createTransport({
   service: 'Gmail',
@@ -18,48 +11,45 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-async function sendEmailWithMailComposer(email, token) {
+async function sendRawEmail(email, token) {
   const emailVerificationToken = token || crypto.randomBytes(20).toString('hex');
+  const boundary = `----=_Part_${Date.now()}`;
 
-  const mailOptions = {
-    from: 'vegvisr.org@gmail.com',
-    to: email,
-    subject: emailTemplates.emailvegvisrorg.verification.subject,
-    html: `
-      <html>
-        <body>
-          <p>Hei,</p>
-          <p>Velkommen til Vegvisr.org! Klikk her for å bekrefte: <a href="https://slowyou.net/a/verify-email?token=${emailVerificationToken}">Bekreft e-post</a></p>
-          <p>Med retning og klarhet,<br>Vegvisr.org-teamet</p>
-          <img src="cid:test-logo" alt="Test Logo" style="max-width: 50px;" />
-        </body>
-      </html>
-    `,
-    attachments: [
-      {
-        filename: 'red_square.png',
-        content: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAIAAACRXR/mAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAySURBVFhH7c6xDQAACAMwT/X/Pw0MDEyD3jAwMTB+AQYGBgYGBgYGBgYGBgYGBgYGBgbgBwYGBuYFMFURAAAAAElFTkSuQmCC', 'base64'),
-        cid: 'test-logo',
-      },
-    ],
-  };
+  const rawMessage = `
+From: vegvisr.org@gmail.com
+To: ${email}
+Subject: Bekreft din reise med Vegvisr.org
+MIME-Version: 1.0
+Content-Type: multipart/related; boundary="${boundary}"
 
-  const mail = new MailComposer(mailOptions);
+--${boundary}
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+  <body>
+    <p>Hei,</p>
+    <p>Velkommen til Vegvisr.org! Klikk her for =C3=A5 bekrefte: <a href=3D"https://slowyou.net/a/verify-email?token=3D${emailVerificationToken}">Bekreft e-post</a></p>
+    <p>Med retning og klarhet,<br>Vegvisr.org-teamet</p>
+    <img src=3D"cid:test-logo" alt=3D"Test Logo" style=3D"max-width: 50px;" />
+  </body>
+</html>
+
+--${boundary}
+Content-Type: image/png; name="red_square.png"
+Content-ID: <test-logo>
+Content-Transfer-Encoding: base64
+Content-Disposition: inline; filename="red_square.png"
+
+iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAIAAACRXR/mAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAySURBVFhH7c6xDQAACAMwT/X/Pw0MDEyD3jAwMTB+AQYGBgYGBgYGBgYGBgYGBgYGBgbgBwYGBuYFMFURAAAAAElFTkSuQmCC
+
+--${boundary}--
+  `.trim();
 
   try {
-    const message = await new Promise((resolve, reject) => {
-      mail.compile().build((err, msg) => {
-        if (err) return reject(err);
-        resolve(msg);
-      });
-    });
-
     const info = await transporter.sendMail({
-      from: mailOptions.from,
-      to: mailOptions.to,
-      raw: message,
+      raw: rawMessage,
     });
-
     console.log('Email sent:', info.response);
     return { success: true, message: 'Verification email sent successfully.' };
   } catch (error) {
@@ -67,6 +57,10 @@ async function sendEmailWithMailComposer(email, token) {
     throw new Error('Error sending verification email.');
   }
 }
+
+// Route
+import express from 'express';
+const router = express.Router();
 
 router.post('/reg-user-vegvisr', async (req, res) => {
   const { email, token } = req.body;
@@ -76,7 +70,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
   }
 
   try {
-    const result = await sendEmailWithMailComposer(email);
+    const result = await sendRawEmail(email);
     res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ message: error.message });
