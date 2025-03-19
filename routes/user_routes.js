@@ -1,10 +1,8 @@
-// routes/auth.js
-
 import express from 'express';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
-import emailTemplates from '../public/languages/nb.json' with { type: 'json' }; // Adjust the import if necessary
+import emailTemplates from '../public/languages/nb.json' with { type: 'json' };
 
 dotenv.config();
 
@@ -13,15 +11,12 @@ const router = express.Router();
 router.post('/reg-user-vegvisr', async (req, res) => {
   const { email, token } = req.body;
 
-  // Validate the API token
   if (token !== process.env.VEGVISR_API_TOKEN) {
     return res.status(401).send('Unauthorized');
   }
 
-  // Generate a new email verification token
   const emailVerificationToken = crypto.randomBytes(20).toString('hex');
 
-  // Create a transporter for sending emails
   const transporter = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
@@ -30,7 +25,6 @@ router.post('/reg-user-vegvisr', async (req, res) => {
     },
   });
 
-  // Prepare the mail options (adjust the template paths as necessary)
   const mailOptions = {
     from: 'vegvisr.org@gmail.com',
     to: email,
@@ -38,15 +32,24 @@ router.post('/reg-user-vegvisr', async (req, res) => {
     html: emailTemplates.emailvegvisrorg.verification.body.replace(
       '{verificationLink}',
       `https://slowyou.net/a/verify-email?token=${emailVerificationToken}`
+    ).replace(
+      'https://slowyou.io/images/logo.svg',
+      'cid:vegvisr-logo'
     ),
+    attachments: [
+      {
+        filename: 'logo.svg',
+        path: 'https://slowyou.io/images/logo.svg', // Direct URL works with Nodemailer
+        cid: 'vegvisr-logo', // Must match the CID in the HTML
+      },
+    ],
   };
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    // Optionally log info.response if needed
     res.status(200).json({ message: 'Verification email sent successfully.' });
   } catch (mailError) {
-    // Log the error if needed
+    console.error('Mail error:', mailError);
     res.status(500).json({ message: 'Error sending verification email.' });
   }
 });
