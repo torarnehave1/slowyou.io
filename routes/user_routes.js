@@ -35,7 +35,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
     from: 'vegvisr.org@gmail.com',
     to: email,
     subject: emailTemplates.emailvegvisrorg.verification.subject,
-    text: emailTemplates.emailvegvisrorg.verification.body.replace(
+    html: emailTemplates.emailvegvisrorg.verification.body.replace(
       '{verificationLink}',
       `https://slowyou.net/a/verify-email?token=${emailVerificationToken}`
     ),
