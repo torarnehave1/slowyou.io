@@ -1,7 +1,13 @@
+// routes/auth.js
+import express from 'express';
+import { randomBytes } from 'crypto'; // Correct ES6 import for randomBytes
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import emailTemplates from '../public/languages/nb.json' with { type: 'json' }; // Adjust path as needed
 
 dotenv.config();
+
+const router = express.Router();
 
 const transporter = nodemailer.createTransport({
   service: 'Gmail',
@@ -12,7 +18,7 @@ const transporter = nodemailer.createTransport({
 });
 
 async function sendRawEmail(email, token) {
-  const emailVerificationToken = token || crypto.randomBytes(20).toString('hex');
+  const emailVerificationToken = token || randomBytes(20).toString('hex'); // Use randomBytes from crypto
   const boundary = `----=_Part_${Date.now()}`;
 
   const rawMessage = `
@@ -57,10 +63,6 @@ iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAIAAACRXR/mAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
     throw new Error('Error sending verification email.');
   }
 }
-
-// Route
-import express from 'express';
-const router = express.Router();
 
 router.post('/reg-user-vegvisr', async (req, res) => {
   const { email, token } = req.body;
