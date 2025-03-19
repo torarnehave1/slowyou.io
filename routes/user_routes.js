@@ -40,17 +40,10 @@ router.post('/reg-user-vegvisr', async (req, res) => {
           <p>Hei,</p>
           <p>Velkommen til Vegvisr.org! Klikk her for å bekrefte: <a href="https://slowyou.net/a/verify-email?token=${emailVerificationToken}">Bekreft e-post</a></p>
           <p>Med retning og klarhet,<br>Vegvisr.org-teamet</p>
-          <img src="cid:test-logo" alt="Test Logo" style="max-width: 50px;" />
+          <img src="https://via.placeholder.com/50x50/ff0000/ffffff?text=Test" alt="Test Logo" style="max-width: 50px;" />
         </body>
       </html>
     `,
-    attachments: [
-      {
-        filename: 'red_square.png',
-        content: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAIAAACRXR/mAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAySURBVFhH7c6xDQAACAMwT/X/Pw0MDEyD3jAwMTB+AQYGBgYGBgYGBgYGBgYGBgYGBgbgBwYGBuYFMFURAAAAAElFTkSuQmCC', 'base64'),
-        cid: 'test-logo',
-      },
-    ],
   };
 
   try {
