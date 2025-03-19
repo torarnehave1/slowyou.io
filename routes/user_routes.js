@@ -1,9 +1,14 @@
-const nodemailer = require('nodemailer');
-const MailComposer = require('nodemailer/lib/mail-composer');
-const dotenv = require('dotenv');
-const emailTemplates = require('../public/languages/nb.json'); // Adjust path as needed
+// routes/auth.js
+import express from 'express';
+import crypto from 'crypto';
+import nodemailer from 'nodemailer';
+import MailComposer from 'nodemailer/lib/mail-composer/index.js'; // Explicit path for ES6
+import dotenv from 'dotenv';
+import emailTemplates from '../public/languages/nb.json' with { type: 'json' }; // Adjust path as needed
 
 dotenv.config();
+
+const router = express.Router();
 
 const transporter = nodemailer.createTransport({
   service: 'Gmail',
@@ -14,10 +19,8 @@ const transporter = nodemailer.createTransport({
 });
 
 async function sendEmailWithMailComposer(email, token) {
-  // Generate a unique verification token
-  const emailVerificationToken = token || require('crypto').randomBytes(20).toString('hex');
+  const emailVerificationToken = token || crypto.randomBytes(20).toString('hex');
 
-  // Define mail options
   const mailOptions = {
     from: 'vegvisr.org@gmail.com',
     to: email,
@@ -41,11 +44,9 @@ async function sendEmailWithMailComposer(email, token) {
     ],
   };
 
-  // Create a new MailComposer instance
   const mail = new MailComposer(mailOptions);
 
   try {
-    // Build the raw message
     const message = await new Promise((resolve, reject) => {
       mail.compile().build((err, msg) => {
         if (err) return reject(err);
@@ -53,11 +54,10 @@ async function sendEmailWithMailComposer(email, token) {
       });
     });
 
-    // Send the raw message using Nodemailer’s SMTP transport
     const info = await transporter.sendMail({
       from: mailOptions.from,
       to: mailOptions.to,
-      raw: message, // Use the raw RFC822 message
+      raw: message,
     });
 
     console.log('Email sent:', info.response);
@@ -67,10 +67,6 @@ async function sendEmailWithMailComposer(email, token) {
     throw new Error('Error sending verification email.');
   }
 }
-
-// Example usage in your route
-const express = require('express');
-const router = express.Router();
 
 router.post('/reg-user-vegvisr', async (req, res) => {
   const { email, token } = req.body;
@@ -87,4 +83,4 @@ router.post('/reg-user-vegvisr', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
