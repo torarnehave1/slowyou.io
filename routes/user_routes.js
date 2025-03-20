@@ -10,6 +10,16 @@ dotenv.config();
 
 const router = express.Router();
 
+
+router.get('/Maiken', (req, res) => {
+  res.send('Hei på deg Maiken');
+});
+
+
+
+  
+
+
 router.post('/reg-user-vegvisr', async (req, res) => {
   const { email, token } = req.body;
 
