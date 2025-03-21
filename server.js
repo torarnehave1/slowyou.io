@@ -4,7 +4,7 @@ import cors from 'cors';
 import userRoutes from './routes/user_routes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { connect } from 'mongoose';s
+import { connect } from 'mongoose';
 
 const app = express();
 
