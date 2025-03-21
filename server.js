@@ -4,9 +4,14 @@ import cors from 'cors';
 import userRoutes from './routes/user_routes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { connect } from 'mongoose';
+import {connect}   from 'mongoose';
+import dotenv from 'dotenv';
+
+
 
 const app = express();
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
