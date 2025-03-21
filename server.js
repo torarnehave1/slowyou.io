@@ -3,7 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import userRoutes from './routes/user_routes.js';
 import path from 'path';
-import { fileURLToPath } from 'url'; 
+import { fileURLToPath } from 'url';
+import { connect } from 'mongoose';s
 
 const app = express();
 
@@ -14,6 +15,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(cors()); // Enable CORS if external servers need to call your API
 app.use(express.json()); // To parse JSON bodies
+
+
+connect(process.env.MONGO_DB_URL)
+  .then(() => console.log('Connected to MongoDB with Mongoose'))
+  .catch(err => console.error('Could not connect to MongoDB', err));
+
 
 // Mount your auth routes (adjust the path as needed)
 app.use('/api', userRoutes);
