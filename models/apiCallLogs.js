@@ -30,7 +30,7 @@ const { Schema } = mongoose;
 
 const apiCallLogsSchema = new Schema(
   {
-    usertoken: {
+    emailVerificationToken: {
       type: String,
       required: true,
     },

@@ -15,12 +15,45 @@ router.get('/Maiken', (req, res) => {
   res.send('Hei på deg Maiken');
 });
 
+
+//New enpoing GET /api/user/verify-email
+// Get the token from the mongdb field emailVerificationToken
+// If the token is found, set the field verified to true
+// Return a message to the user
+router.get('/verify-email', async (req, res) => {
+  const { token } = req.query;
+  // Validate the token
+  if (!token) {
+    return res.status(400).json({ message: 'Token is required.' });
+  }
+
+  // Find the emailVerificationToken collection logApiCall in the  by the email verification token
+  
+  const emailVerificationToken = await logApiCall.findOne({
+    emailVerificationToken: token,
+  });
+
+  // If the token is not found, return an error message
+  if (!emailVerificationToken) {
+    return res.status(404).json({ message: 'Token not found.' });
+  }
+
+  // If the token is found, set the verified field to true
+  emailVerificationToken.verified = true;
+  await emailVerificationToken.save();
+
+  // Return a success message
+  res.status(200).json({ message: 'Email verified successfully.' });
+});
+
+
+
 router.post('/reg-user-vegvisr', async (req, res) => {
   const { email, token } = req.body;
 
   // Log the API call
   await logApiCall({
-    usertoken: req.body.token,
+    emailVerificationToken: req.body.token,
     email: req.body.email,
     endpoint: '/reg-user-vegvisr',
     method: 'POST',
@@ -55,7 +88,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
     subject: emailTemplates.emailvegvisrorg.verification.subject,
     html: emailTemplates.emailvegvisrorg.verification.body.replace(
       '{verificationLink}',
-      `https://slowyou.net/a/verify-email?token=${emailVerificationToken}`
+      `https://test.vegvisr.io/verify-email?token=${emailVerificationToken}`
     ),
   };
 
