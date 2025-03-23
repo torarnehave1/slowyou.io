@@ -96,6 +96,8 @@ router.post('/reg-user-vegvisr', async (req, res) => {
     const info = await transporter.sendMail(mailOptions);
     // Optionally log info.response if needed
     res.status(200).json({ message: 'Verification email sent successfully.' });
+ console.log('Verification email sent successfully.', info.response);
+ 
   } catch (mailError) {
     // Log the error if needed
     res.status(500).json({ message: 'Error sending verification email.' });
