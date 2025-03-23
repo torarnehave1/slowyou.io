@@ -5,23 +5,29 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import emailTemplates from '../public/languages/nb.json' with { type: 'json' }; // Adjust the import if necessary
+import { logApiCall } from '../services/apiCallLogService.js';
 
 dotenv.config();
 
 const router = express.Router();
 
-
 router.get('/Maiken', (req, res) => {
   res.send('Hei på deg Maiken');
 });
 
-
-
-  
-
-
 router.post('/reg-user-vegvisr', async (req, res) => {
   const { email, token } = req.body;
+
+  // Log the API call
+  await logApiCall({
+    usertoken: req.body.token,
+    email: req.body.email,
+    endpoint: '/reg-user-vegvisr',
+    method: 'POST',
+    params: req.body,
+    headers: req.headers,
+    timestamp: new Date(),
+  })
 
   // Validate the API token
   if (token !== process.env.VEGVISR_API_TOKEN) {
