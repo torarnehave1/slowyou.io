@@ -34,10 +34,6 @@ const apiCallLogsSchema = new Schema(
       type: String,
       required: true,
     },
-    responseLink: {
-      type: String,
-      required: true,
-    },
     verifyied: {
       type: Boolean,
       required: true,
