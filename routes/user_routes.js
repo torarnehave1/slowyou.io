@@ -53,8 +53,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
 
   // Log the API call
   await logApiCall({
-
-    apiVerificationToken: req.body.token,
+    
     emailVerificationToken: emailVerificationToken,
     email: req.body.email,
     endpoint: '/reg-user-vegvisr',
