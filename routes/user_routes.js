@@ -5,7 +5,8 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import emailTemplates from '../public/languages/nb.json' with { type: 'json' }; // Adjust the import if necessary
-import { logApiCall } from '../services/apiCallLogService.js';
+import { logApiCall }  from '../services/apiCallLogService.js';
+import EmailVerificationToken from '../models/apiCallLogs.js';
 
 dotenv.config();
 
@@ -15,21 +16,22 @@ router.get('/Maiken', (req, res) => {
   res.send('Hei på deg Maiken');
 });
 
-
 //New enpoing GET /api/user/verify-email
 // Get the token from the mongdb field emailVerificationToken
 // If the token is found, set the field verified to true
 // Return a message to the user
-router.get('/verify-email', async (req, res) => {
-  const { token } = req.query;
-  // Validate the token
-  if (!token) {
-    return res.status(400).json({ message: 'Token is required.' });
+router.post('/verify-email', async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  // Validate the authorization header
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(400).json({ message: 'Bearer token is required.' });
   }
 
-  // Find the emailVerificationToken collection logApiCall in the  by the email verification token
-  
-  const emailVerificationToken = await logApiCall.findOne({
+  const token = authHeader.split(' ')[1];
+
+  // Find the email verification token in the database
+  const emailVerificationToken = await EmailVerificationToken.findOne({
     emailVerificationToken: token,
   });
 
@@ -46,8 +48,6 @@ router.get('/verify-email', async (req, res) => {
   res.status(200).json({ message: 'Email verified successfully.' });
 });
 
-
-
 router.post('/reg-user-vegvisr', async (req, res) => {
   const { email, token } = req.body;
 
@@ -60,7 +60,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
     params: req.body,
     headers: req.headers,
     timestamp: new Date(),
-  })
+  });
 
   // Validate the API token
   if (token !== process.env.VEGVISR_API_TOKEN) {
@@ -96,8 +96,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
     const info = await transporter.sendMail(mailOptions);
     // Optionally log info.response if needed
     res.status(200).json({ message: 'Verification email sent successfully.' });
- console.log('Verification email sent successfully.', info.response);
- 
+    console.log('Verification email sent successfully.', info.response);
   } catch (mailError) {
     // Log the error if needed
     res.status(500).json({ message: 'Error sending verification email.' });
