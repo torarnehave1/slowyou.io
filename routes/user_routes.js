@@ -48,19 +48,24 @@ router.get('/verify-email', async (req, res) => {
 });
 
 router.post('/reg-user-vegvisr', async (req, res) => {
-  const { email, token } = req.body;
-  
+  const { email } = req.body;
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send('Unauthorized');
+  }
+
+  const token = authHeader.split(' ')[1];
+
   if (token !== process.env.VEGVISR_API_TOKEN) {
     console.log('Unauthorized access attempt', token);
-
-    return res.status(401).send('Unauthorized', token);
+    return res.status(401).send('Unauthorized');
   }
-  
+
   const emailVerificationToken = crypto.randomBytes(20).toString('hex');
 
   // Log the API call
   await logApiCall({
-    
     emailVerificationToken: emailVerificationToken,
     email: req.body.email,
     endpoint: '/reg-user-vegvisr',
@@ -70,11 +75,6 @@ router.post('/reg-user-vegvisr', async (req, res) => {
     timestamp: new Date(),
   });
 
-  // Validate the API token
-  
-
-  // Generate a new email verification token
-  
   // Create a transporter for sending emails
   const transporter = nodemailer.createTransport({
     service: 'Gmail',
