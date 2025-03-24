@@ -87,7 +87,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
     subject: emailTemplates.emailvegvisrorg.verification.subject,
     html: emailTemplates.emailvegvisrorg.verification.body.replace(
       '{verificationLink}',
-      `https://test.vegvisr.io/verify-email?token=${emailVerificationToken}`
+      `https://test.vegvisr.org/verify-email?token=${emailVerificationToken}`
     ),
   };
 
