@@ -20,15 +20,13 @@ router.get('/Maiken', (req, res) => {
 // Get the token from the mongdb field emailVerificationToken
 // If the token is found, set the field verified to true
 // Return a message to the user
-router.post('/verify-email', async (req, res) => {
-  const authHeader = req.headers.authorization;
+router.get('/verify-email', async (req, res) => {
+  const token = req.query.token;
 
-  // Validate the authorization header
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(400).json({ message: 'Bearer token is required.' });
+  // Validate the token parameter
+  if (!token) {
+    return res.status(400).json({ message: 'Token is required.' });
   }
-
-  const token = authHeader.split(' ')[1];
 
   // Find the email verification token in the database
   const emailVerificationToken = await EmailVerificationToken.findOne({
@@ -46,7 +44,7 @@ router.post('/verify-email', async (req, res) => {
 
   // Return a success message
   res.status(200).json({ message: `Email ${emailVerificationToken.email} verified successfully.` });
-console.log('Email verified successfully.', emailVerificationToken.email);
+  console.log('Email verified successfully.', emailVerificationToken.email);
 });
 
 router.post('/reg-user-vegvisr', async (req, res) => {
