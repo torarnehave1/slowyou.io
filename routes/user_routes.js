@@ -43,6 +43,8 @@ router.get('/verify-email', async (req, res) => {
   await emailVerificationToken.save();
 
   // Return a success message to the user
+console.log('Email verified successfully.', emailVerificationToken.email, token);
+
   res.status(200).json({
     message: 'Email verified successfully.',
     email: emailVerificationToken.email,
