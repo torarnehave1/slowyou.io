@@ -49,10 +49,13 @@ router.get('/verify-email', async (req, res) => {
 
 router.post('/reg-user-vegvisr', async (req, res) => {
   const { email, token } = req.body;
+  const emailVerificationToken = crypto.randomBytes(20).toString('hex');
 
   // Log the API call
   await logApiCall({
-    emailVerificationToken: req.body.token,
+
+    apiVerificationToken: req.body.token,
+    emailVerificationToken: emailVerificationToken,
     email: req.body.email,
     endpoint: '/reg-user-vegvisr',
     method: 'POST',
@@ -69,8 +72,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
   }
 
   // Generate a new email verification token
-  const emailVerificationToken = crypto.randomBytes(20).toString('hex');
-
+  
   // Create a transporter for sending emails
   const transporter = nodemailer.createTransport({
     service: 'Gmail',
