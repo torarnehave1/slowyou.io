@@ -45,7 +45,8 @@ router.post('/verify-email', async (req, res) => {
   await emailVerificationToken.save();
 
   // Return a success message
-  res.status(200).json({ message: 'Email verified successfully.' });
+  res.status(200).json({ message: `Email ${emailVerificationToken.email} verified successfully.` });
+console.log('Email verified successfully.', emailVerificationToken.email);
 });
 
 router.post('/reg-user-vegvisr', async (req, res) => {
