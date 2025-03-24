@@ -68,7 +68,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
   if (token !== process.env.VEGVISR_API_TOKEN) {
     console.log('Unauthorized access attempt', token);
 
-   // return res.status(401).send('Unauthorized', token);
+    return res.status(401).send('Unauthorized', token);
   }
 
   // Generate a new email verification token
