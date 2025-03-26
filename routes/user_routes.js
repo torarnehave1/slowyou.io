@@ -60,7 +60,7 @@ console.log('Email verified successfully.', emailVerificationToken.email, token)
 });
 
 router.post('/reg-user-vegvisr', async (req, res) => {
-  const { email } = req.body;
+  const email = req.query.email;
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
