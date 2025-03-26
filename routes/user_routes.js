@@ -12,6 +12,34 @@ dotenv.config();
 
 const router = express.Router();
 
+// Middleware to validate Content-Type and handle JSON parsing errors
+router.use((req, res, next) => {
+  if (req.method === 'POST' || req.method === 'PUT') {
+    if (!req.is('application/json')) {
+      return res.status(400).json({ message: 'Invalid Content-Type. Expected application/json.' });
+    }
+  }
+  next();
+});
+
+router.use(express.json({
+  strict: true,
+  verify: (req, res, buf) => {
+    try {
+      JSON.parse(buf.toString());
+    } catch (err) {
+      throw new SyntaxError('Invalid JSON payload.');
+    }
+  }
+}));
+
+router.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.message.includes('JSON')) {
+    return res.status(400).json({ message: 'Invalid JSON payload.' });
+  }
+  next(err);
+});
+
 router.get('/Maiken', (req, res) => {
   res.send('Hei på deg Maiken');
 });
@@ -50,13 +78,6 @@ console.log('Email verified successfully.', emailVerificationToken.email, token)
     email: emailVerificationToken.email,
     emailVerificationToken: token,
   });
-
-
-
-
-  
-
-
 });
 
 router.post('/reg-user-vegvisr', async (req, res) => {
