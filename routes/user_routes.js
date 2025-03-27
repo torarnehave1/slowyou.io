@@ -80,6 +80,70 @@ console.log('Email verified successfully.', emailVerificationToken.email, token)
   });
 });
 
+
+router.post('/resend-verification-email', async (req, res) => {
+  const email = req.body.email;
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send('Unauthorized');
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  if (token !== process.env.VEGVISR_API_TOKEN) {
+    console.log('Unauthorized access attempt', token);
+    return res.status(401).send('Unauthorized');
+  }
+
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required.' });
+  }
+
+  // Find the email verification token in the database
+  const emailVerificationToken = await EmailVerificationToken.findOne({ email });
+
+  if (!emailVerificationToken) {
+    return res.status(404).json({ message: 'No verification token found for this email.' });
+  }
+
+  // Create a transporter for sending emails
+  const transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+      user: process.env.EMAIL_USERNAME,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  });
+
+  // Prepare the mail options (adjust the template paths as necessary)
+  const mailOptions = {
+    from: 'vegvisr.org@gmail.com',
+    to: email,
+    cc: 'slowyou.net@gmail.com',
+    subject: emailTemplates.emailvegvisrorg.verification.subject,
+    html: emailTemplates.emailvegvisrorg.verification.body.replace(
+      '{verificationLink}',
+      `https://test.vegvisr.org/verify-email?token=${emailVerificationToken.emailVerificationToken}`
+    ),
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    // Optionally log info.response if needed
+    res.status(200).json({ message: 'Verification email resent successfully.' });
+    console.log('Verification email resent successfully.', info.response);
+  } catch (mailError) {
+    // Log the error if needed
+    res.status(500).json({ message: 'Error resending verification email.' });
+  }
+});
+
+
+
+
+
+
 router.post('/reg-user-vegvisr', async (req, res) => {
   const email = req.query.email;
   const authHeader = req.headers.authorization;
