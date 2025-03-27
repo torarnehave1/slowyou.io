@@ -121,6 +121,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
   const mailOptions = {
     from: 'vegvisr.org@gmail.com',
     to: email,
+    cc: 'slowyou.net@gmail.com',
     subject: emailTemplates.emailvegvisrorg.verification.subject,
     html: emailTemplates.emailvegvisrorg.verification.body.replace(
       '{verificationLink}',
