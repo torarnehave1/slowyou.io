@@ -82,7 +82,7 @@ console.log('Email verified successfully.', emailVerificationToken.email, token)
 
 
 router.post('/resend-verification-email', async (req, res) => {
-  const email = req.body.email;
+  const email = req.query.email;
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
