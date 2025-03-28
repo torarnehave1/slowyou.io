@@ -164,7 +164,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
   // Log the API call
   await logApiCall({
     emailVerificationToken: emailVerificationToken,
-    email: req.body.email,
+    email: email,
     endpoint: '/reg-user-vegvisr',
     method: 'POST',
     params: req.body,
