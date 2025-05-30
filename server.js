@@ -2,7 +2,7 @@
 import express from 'express';
 import cors from 'cors';
 import userRoutes from './routes/user_routes.js';
-import githubRoutes from './routes/github_routes.js';
+import githubRoutes from './routes/github_route.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import {connect}   from 'mongoose';
