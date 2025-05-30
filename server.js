@@ -30,7 +30,7 @@ connect(process.env.MONGO_DB_URL)
 
 // Mount your auth routes (adjust the path as needed)
 app.use('/api', userRoutes);
-app.use('/github', githubRoutes);
+app.use('/api/github', githubRoutes);
 
 
 app.get('/', (req, res) => {
