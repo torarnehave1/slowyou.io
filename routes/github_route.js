@@ -1,5 +1,5 @@
 import express from "express";
-import { Octokit } from "@octokit/core";
+import { Octokit } from "@octokit/rest";
 
 // api/github this is the route defined in the server.js
 // 07.07.2024
@@ -20,13 +20,13 @@ router.get("/test", async (req, res) => {
 
 router.get("/issues", async (req, res) => {
   const octokit = new Octokit({
-    auth:accessToken , // Replace with your actual access token
+    auth: accessToken,
   });
 
   try {
-    const data = await octokit.paginate("GET /repos/torarnehave1/slowyouGPT/issues", {
-      owner:owner,
-      repo:repo,
+    const { data } = await octokit.rest.issues.listForRepo({
+      owner: owner,
+      repo: repo,
       per_page: 100,
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",

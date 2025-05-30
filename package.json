@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "@octokit/core": "^7.0.2",
+    "@octokit/rest": "^22.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "dotignore": "^0.1.2",
