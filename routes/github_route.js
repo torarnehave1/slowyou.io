@@ -151,7 +151,7 @@ router.get("/issue-titles", async (req, res) => {
         // Send a POST request to create an issue
         const response = await octokit.request('POST /repos/{owner}/{repo}/issues', {
             owner: 'torarnehave1',  // Replace 'torarnehave1' with your GitHub username or organization name
-            repo: 'slowyouGPT',     // Replace 'slowyouGPT' with your repository name
+            repo: 'vegvisr-frontend',     // Replace 'slowyouGPT' with your repository name
             title: title,  // Your issue title
             body: body,  // Your issue body content
             labels: labelsArray,
