@@ -208,4 +208,64 @@ router.post('/reg-user-vegvisr', async (req, res) => {
   }
 })
 
+router.post('/send-vegvisr-email', async (req, res) => {
+  const { email, template, subject, callbackUrl } = req.body
+  const authHeader = req.headers.authorization
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send('Unauthorized')
+  }
+
+  const token = authHeader.split(' ')[1]
+
+  if (token !== process.env.VEGVISR_API_TOKEN) {
+    console.log('Unauthorized access attempt', token)
+    return res.status(401).send('Unauthorized')
+  }
+
+  if (!email || !template || !subject) {
+    return res.status(400).json({ message: 'Email, template, and subject are required.' })
+  }
+
+  // Log the API call
+  await logApiCall({
+    emailVerificationToken: 'custom-email',
+    email: email,
+    role: 'custom',
+    endpoint: '/send-vegvisr-email',
+    method: 'POST',
+    params: req.body,
+    headers: req.headers,
+    timestamp: new Date(),
+  })
+
+  // Create a transporter for sending emails
+  const transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+      user: process.env.EMAIL_USERNAME,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  })
+
+  // Prepare the mail options using custom template
+  const mailOptions = {
+    from: 'vegvisr.org@gmail.com',
+    to: email,
+    cc: 'slowyou.net@gmail.com',
+    subject: subject,
+    html: template,
+  }
+
+  try {
+    const info = await transporter.sendMail(mailOptions)
+    // Optionally log info.response if needed
+    res.status(200).json({ message: 'Custom email sent successfully.' })
+    console.log('Custom email sent successfully.', info.response)
+  } catch (mailError) {
+    // Log the error if needed
+    res.status(500).json({ message: 'Error sending custom email.' })
+  }
+})
+
 export default router
