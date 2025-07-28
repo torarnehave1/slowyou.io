@@ -240,7 +240,7 @@ router.post('/send-vegvisr-email', async (req, res) => {
   })
 
   // Create a transporter for sending emails
-  const transporter = nodemailer.createTransporter({
+  const transporter = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
       user: process.env.EMAIL_USERNAME,
