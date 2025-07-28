@@ -209,7 +209,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
 })
 
 router.post('/send-vegvisr-email', async (req, res) => {
-  const { email, template, subject, callbackUrl } = req.body
+  const { email, template, subject, callbackUrl, variables } = req.body
   const authHeader = req.headers.authorization
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -240,7 +240,7 @@ router.post('/send-vegvisr-email', async (req, res) => {
   })
 
   // Create a transporter for sending emails
-  const transporter = nodemailer.createTransport({
+  const transporter = nodemailer.createTransporter({
     service: 'Gmail',
     auth: {
       user: process.env.EMAIL_USERNAME,
@@ -248,22 +248,40 @@ router.post('/send-vegvisr-email', async (req, res) => {
     },
   })
 
-  // Prepare the mail options using custom template
+  // Process template with variables if provided
+  let processedTemplate = template
+  let processedSubject = subject
+  
+  if (variables && typeof variables === 'object') {
+    // Replace variables in template: {variableName} -> value
+    Object.keys(variables).forEach(key => {
+      const placeholder = `{${key}}`
+      processedTemplate = processedTemplate.replace(new RegExp(placeholder, 'g'), variables[key])
+      processedSubject = processedSubject.replace(new RegExp(placeholder, 'g'), variables[key])
+    })
+  }
+
+  // Prepare the mail options using processed template
   const mailOptions = {
     from: 'vegvisr.org@gmail.com',
     to: email,
     cc: 'slowyou.net@gmail.com',
-    subject: subject,
-    html: template,
+    subject: processedSubject,
+    html: processedTemplate,
   }
 
   try {
     const info = await transporter.sendMail(mailOptions)
     // Optionally log info.response if needed
-    res.status(200).json({ message: 'Custom email sent successfully.' })
+    res.status(200).json({ 
+      message: 'Custom email sent successfully.',
+      processedTemplate: processedTemplate, // For debugging
+      processedSubject: processedSubject     // For debugging
+    })
     console.log('Custom email sent successfully.', info.response)
   } catch (mailError) {
     // Log the error if needed
+    console.error('Email sending error:', mailError)
     res.status(500).json({ message: 'Error sending custom email.' })
   }
 })
