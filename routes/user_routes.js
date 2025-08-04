@@ -223,13 +223,16 @@ router.post('/send-vegvisr-email', async (req, res) => {
     return res.status(401).send('Unauthorized')
   }
 
+ const emailVerificationToken = crypto.randomBytes(20).toString('hex')
+
+
   if (!email || !template || !subject) {
     return res.status(400).json({ message: 'Email, template, and subject are required.' })
   }
 
   // Log the API call
   await logApiCall({
-    emailVerificationToken: 'custom-email',
+    emailVerificationToken: emailVerificationToken,
     email: email,
     role: 'custom',
     endpoint: '/send-vegvisr-email',
@@ -248,6 +251,10 @@ router.post('/send-vegvisr-email', async (req, res) => {
     },
   })
 
+  // Build callback URL with email verification token and affiliate token
+  const affiliateToken = variables?.invitationToken || variables?.affiliateToken || ''
+  const callbackUrlWithParams = `https://www.vegvisr.org/verify-email/?token=${emailVerificationToken}&affiliateToken=${affiliateToken}`
+  
   // Process template with variables if provided
   let processedTemplate = template
   let processedSubject = subject
@@ -259,6 +266,10 @@ router.post('/send-vegvisr-email', async (req, res) => {
       processedTemplate = processedTemplate.replace(new RegExp(placeholder, 'g'), variables[key])
       processedSubject = processedSubject.replace(new RegExp(placeholder, 'g'), variables[key])
     })
+    
+    // Also replace the callbackUrl placeholder if it exists in the template
+    processedTemplate = processedTemplate.replace(new RegExp('{callbackUrl}', 'g'), callbackUrlWithParams)
+    processedSubject = processedSubject.replace(new RegExp('{callbackUrl}', 'g'), callbackUrlWithParams)
   }
 
   // Prepare the mail options using processed template
@@ -276,7 +287,10 @@ router.post('/send-vegvisr-email', async (req, res) => {
     res.status(200).json({ 
       message: 'Custom email sent successfully.',
       processedTemplate: processedTemplate, // For debugging
-      processedSubject: processedSubject     // For debugging
+      processedSubject: processedSubject,     // For debugging
+      callbackUrl: callbackUrlWithParams,    // For debugging
+      emailVerificationToken: emailVerificationToken, // For debugging
+      affiliateToken: affiliateToken         // For debugging
     })
     console.log('Custom email sent successfully.', info.response)
   } catch (mailError) {
