@@ -267,6 +267,10 @@ router.post('/send-vegvisr-email', async (req, res) => {
       processedSubject = processedSubject.replace(new RegExp(placeholder, 'g'), variables[key])
     })
     
+    // Replace the affiliate registration URL with our custom callback URL that includes both tokens
+    processedTemplate = processedTemplate.replace(new RegExp('{affiliateRegistrationUrl}', 'g'), callbackUrlWithParams)
+    processedSubject = processedSubject.replace(new RegExp('{affiliateRegistrationUrl}', 'g'), callbackUrlWithParams)
+    
     // Also replace the callbackUrl placeholder if it exists in the template
     processedTemplate = processedTemplate.replace(new RegExp('{callbackUrl}', 'g'), callbackUrlWithParams)
     processedSubject = processedSubject.replace(new RegExp('{callbackUrl}', 'g'), callbackUrlWithParams)
