@@ -260,20 +260,16 @@ router.post('/send-vegvisr-email', async (req, res) => {
   let processedSubject = subject
   
   if (variables && typeof variables === 'object') {
+    // Override the affiliateRegistrationUrl variable with our custom callback URL
+    variables.affiliateRegistrationUrl = callbackUrlWithParams
+    variables.callbackUrl = callbackUrlWithParams
+    
     // Replace variables in template: {variableName} -> value
     Object.keys(variables).forEach(key => {
       const placeholder = `{${key}}`
       processedTemplate = processedTemplate.replace(new RegExp(placeholder, 'g'), variables[key])
       processedSubject = processedSubject.replace(new RegExp(placeholder, 'g'), variables[key])
     })
-    
-    // Replace the affiliate registration URL with our custom callback URL that includes both tokens
-    processedTemplate = processedTemplate.replace(new RegExp('{affiliateRegistrationUrl}', 'g'), callbackUrlWithParams)
-    processedSubject = processedSubject.replace(new RegExp('{affiliateRegistrationUrl}', 'g'), callbackUrlWithParams)
-    
-    // Also replace the callbackUrl placeholder if it exists in the template
-    processedTemplate = processedTemplate.replace(new RegExp('{callbackUrl}', 'g'), callbackUrlWithParams)
-    processedSubject = processedSubject.replace(new RegExp('{callbackUrl}', 'g'), callbackUrlWithParams)
   }
 
   // Prepare the mail options using processed template
