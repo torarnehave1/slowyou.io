@@ -223,8 +223,10 @@ router.post('/send-vegvisr-email', async (req, res) => {
     return res.status(401).send('Unauthorized')
   }
 
- const emailVerificationToken = crypto.randomBytes(20).toString('hex')
 
+const emailVerificationToken = crypto.randomBytes(20).toString('hex');
+const completeUrl = `${variables.affiliateRegistrationUrl}&token=${emailVerificationToken}`;
+variables.affiliateRegistrationUrl = completeUrl;
 
   if (!email || !template || !subject) {
     return res.status(400).json({ message: 'Email, template, and subject are required.' })
@@ -252,12 +254,16 @@ router.post('/send-vegvisr-email', async (req, res) => {
   })
 
   // Build callback URL with email verification token and affiliate token
-  const affiliateToken = variables?.invitationToken || variables?.affiliateToken || ''
-  const callbackUrlWithParams = `https://www.vegvisr.org/verify-email/?token=${emailVerificationToken}&affiliateToken=${affiliateToken}`
+ // const affiliateToken = variables?.invitationToken || variables?.affiliateToken || ''
+//  const callbackUrlWithParams = `https://www.vegvisr.org/verify-email/?token=${emailVerificationToken}&affiliateToken=${affiliateToken}`
   
   // Process template with variables if provided
   let processedTemplate = template
   let processedSubject = subject
+  
+  // Replace double-brace placeholders with actual email verification token (if any)
+ // processedTemplate = processedTemplate.replace(/\{\{EMAIL_VERIFICATION_TOKEN\}\}/g, emailVerificationToken)
+ // processedSubject = processedSubject.replace(/\{\{EMAIL_VERIFICATION_TOKEN\}\}/g, emailVerificationToken)
   
   if (variables && typeof variables === 'object') {
     // Override the affiliateRegistrationUrl variable with our custom callback URL
