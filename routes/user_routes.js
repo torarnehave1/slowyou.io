@@ -266,9 +266,6 @@ variables.affiliateRegistrationUrl = completeUrl;
  // processedSubject = processedSubject.replace(/\{\{EMAIL_VERIFICATION_TOKEN\}\}/g, emailVerificationToken)
   
   if (variables && typeof variables === 'object') {
-    // Override the affiliateRegistrationUrl variable with our custom callback URL
-    variables.affiliateRegistrationUrl = callbackUrlWithParams
-    variables.callbackUrl = callbackUrlWithParams
     
     // Replace variables in template: {variableName} -> value
     Object.keys(variables).forEach(key => {
@@ -294,9 +291,7 @@ variables.affiliateRegistrationUrl = completeUrl;
       message: 'Custom email sent successfully.',
       processedTemplate: processedTemplate, // For debugging
       processedSubject: processedSubject,     // For debugging
-      callbackUrl: callbackUrlWithParams,    // For debugging
-      emailVerificationToken: emailVerificationToken, // For debugging
-      affiliateToken: affiliateToken         // For debugging
+      emailVerificationToken: emailVerificationToken // For debugging
     })
     console.log('Custom email sent successfully.', info.response)
   } catch (mailError) {
