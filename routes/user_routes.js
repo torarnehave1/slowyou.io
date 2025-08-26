@@ -42,7 +42,7 @@ function createTransporterForSender(email) {
     throw new Error(`Sender '${email}' not found in approved list`)
   }
   
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     service: 'Gmail',
     auth: {
       user: email,
@@ -188,7 +188,7 @@ router.post('/resend-verification-email', async (req, res) => {
     fromEmail = senderEmail
   } else {
     // Use default configuration
-    transporter = nodemailer.createTransporter({
+    transporter = nodemailer.createTransport({
       service: 'Gmail',
       auth: {
         user: process.env.EMAIL_USERNAME,
