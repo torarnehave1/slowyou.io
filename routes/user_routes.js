@@ -12,6 +12,45 @@ dotenv.config()
 
 const router = express.Router()
 
+// Helper functions for multi-sender email support
+function parseApprovedSenders() {
+  const senderConfigs = {}
+  const sendersString = process.env.APPROVED_SENDERS || ''
+  
+  sendersString.split(',').forEach(pair => {
+    const [email, password] = pair.trim().split(':')
+    if (email && password) {
+      senderConfigs[email] = password
+    }
+  })
+  
+  return senderConfigs
+}
+
+function isApprovedSender(email) {
+  const configs = parseApprovedSenders()
+  return configs.hasOwnProperty(email)
+}
+
+function getPasswordForSender(email) {
+  const configs = parseApprovedSenders()
+  return configs[email]
+}
+
+function createTransporterForSender(email) {
+  if (!isApprovedSender(email)) {
+    throw new Error(`Sender '${email}' not found in approved list`)
+  }
+  
+  return nodemailer.createTransporter({
+    service: 'Gmail',
+    auth: {
+      user: email,
+      pass: getPasswordForSender(email),
+    },
+  })
+}
+
 // Middleware to validate Content-Type and handle JSON parsing errors
 router.use((req, res, next) => {
   if (req.method === 'POST' || req.method === 'PUT') {
@@ -44,6 +83,34 @@ router.use((err, req, res, next) => {
 
 router.get('/health', (req, res) => {
   res.send('I am feeling good')
+})
+
+// New endpoint to list available senders
+router.get('/available-senders', (req, res) => {
+  const authHeader = req.headers.authorization
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send('Unauthorized')
+  }
+
+  const token = authHeader.split(' ')[1]
+
+  if (token !== process.env.VEGVISR_API_TOKEN) {
+    console.log('Unauthorized access attempt', token)
+    return res.status(401).send('Unauthorized')
+  }
+
+  const configs = parseApprovedSenders()
+  const availableSenders = Object.keys(configs).map(email => ({
+    email: email,
+    isDefault: email === process.env.EMAIL_USERNAME
+  }))
+
+  res.json({
+    defaultSender: process.env.EMAIL_USERNAME,
+    availableSenders: availableSenders,
+    totalSenders: availableSenders.length
+  })
 })
 
 //New enpoing GET /api/user/verify-email
@@ -84,6 +151,7 @@ router.get('/verify-email', async (req, res) => {
 
 router.post('/resend-verification-email', async (req, res) => {
   const email = req.query.email
+  const senderEmail = req.body.senderEmail || req.query.senderEmail
   const authHeader = req.headers.authorization
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -108,18 +176,30 @@ router.post('/resend-verification-email', async (req, res) => {
     return res.status(404).json({ message: 'No verification token found for this email.' })
   }
 
-  // Create a transporter for sending emails
-  const transporter = nodemailer.createTransport({
-    service: 'Gmail',
-    auth: {
-      user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  })
+  // Create transporter based on sender preference
+  let transporter
+  let fromEmail = 'vegvisr.org@gmail.com' // default
+
+  if (senderEmail) {
+    if (!isApprovedSender(senderEmail)) {
+      return res.status(400).json({ message: `Sender '${senderEmail}' not found in approved list` })
+    }
+    transporter = createTransporterForSender(senderEmail)
+    fromEmail = senderEmail
+  } else {
+    // Use default configuration
+    transporter = nodemailer.createTransporter({
+      service: 'Gmail',
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    })
+  }
 
   // Prepare the mail options (adjust the template paths as necessary)
   const mailOptions = {
-    from: 'vegvisr.org@gmail.com',
+    from: fromEmail,
     to: email,
     cc: 'slowyou.net@gmail.com',
     subject: emailTemplates.emailvegvisrorg.verification.subject,
@@ -132,7 +212,10 @@ router.post('/resend-verification-email', async (req, res) => {
   try {
     const info = await transporter.sendMail(mailOptions)
     // Optionally log info.response if needed
-    res.status(200).json({ message: 'Verification email resent successfully.' })
+    res.status(200).json({ 
+      message: 'Verification email resent successfully.',
+      sentFrom: fromEmail
+    })
     console.log('Verification email resent successfully.', info.response)
   } catch (mailError) {
     // Log the error if needed
@@ -143,6 +226,7 @@ router.post('/resend-verification-email', async (req, res) => {
 router.post('/reg-user-vegvisr', async (req, res) => {
   const email = req.query.email
   const role = req.query.role || 'user'
+  const senderEmail = req.body.senderEmail || req.query.senderEmail
   const authHeader = req.headers.authorization
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -170,14 +254,26 @@ router.post('/reg-user-vegvisr', async (req, res) => {
     timestamp: new Date(),
   })
 
-  // Create a transporter for sending emails
-  const transporter = nodemailer.createTransport({
-    service: 'Gmail',
-    auth: {
-      user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  })
+  // Create transporter based on sender preference
+  let transporter
+  let fromEmail = 'vegvisr.org@gmail.com' // default
+
+  if (senderEmail) {
+    if (!isApprovedSender(senderEmail)) {
+      return res.status(400).json({ message: `Sender '${senderEmail}' not found in approved list` })
+    }
+    transporter = createTransporterForSender(senderEmail)
+    fromEmail = senderEmail
+  } else {
+    // Use default configuration
+    transporter = nodemailer.createTransporter({
+      service: 'Gmail',
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    })
+  }
 
   // Select email template based on role
   const template =
@@ -187,7 +283,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
 
   // Prepare the mail options (adjust the template paths as necessary)
   const mailOptions = {
-    from: 'vegvisr.org@gmail.com',
+    from: fromEmail,
     to: email,
     cc: 'slowyou.net@gmail.com',
     subject: template.subject,
@@ -200,7 +296,10 @@ router.post('/reg-user-vegvisr', async (req, res) => {
   try {
     const info = await transporter.sendMail(mailOptions)
     // Optionally log info.response if needed
-    res.status(200).json({ message: 'Verification email sent successfully.' })
+    res.status(200).json({ 
+      message: 'Verification email sent successfully.',
+      sentFrom: fromEmail
+    })
     console.log('Verification email sent successfully.', info.response)
   } catch (mailError) {
     // Log the error if needed
@@ -209,7 +308,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
 })
 
 router.post('/send-vegvisr-email', async (req, res) => {
-  const { email, template, subject, callbackUrl, variables } = req.body
+  const { email, template, subject, callbackUrl, variables, senderEmail } = req.body
   const authHeader = req.headers.authorization
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -244,14 +343,26 @@ variables.affiliateRegistrationUrl = completeUrl;
     timestamp: new Date(),
   })
 
-  // Create a transporter for sending emails
-  const transporter = nodemailer.createTransport({
-    service: 'Gmail',
-    auth: {
-      user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  })
+  // Create transporter based on sender preference
+  let transporter
+  let fromEmail = 'vegvisr.org@gmail.com' // default
+
+  if (senderEmail) {
+    if (!isApprovedSender(senderEmail)) {
+      return res.status(400).json({ message: `Sender '${senderEmail}' not found in approved list` })
+    }
+    transporter = createTransporterForSender(senderEmail)
+    fromEmail = senderEmail
+  } else {
+    // Use default configuration
+    transporter = nodemailer.createTransporter({
+      service: 'Gmail',
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    })
+  }
 
   // Build callback URL with email verification token and affiliate token
  // const affiliateToken = variables?.invitationToken || variables?.affiliateToken || ''
@@ -277,7 +388,7 @@ variables.affiliateRegistrationUrl = completeUrl;
 
   // Prepare the mail options using processed template
   const mailOptions = {
-    from: 'vegvisr.org@gmail.com',
+    from: fromEmail,
     to: email,
     cc: 'slowyou.net@gmail.com',
     subject: processedSubject,
@@ -291,7 +402,8 @@ variables.affiliateRegistrationUrl = completeUrl;
       message: 'Custom email sent successfully.',
       processedTemplate: processedTemplate, // For debugging
       processedSubject: processedSubject,     // For debugging
-      emailVerificationToken: emailVerificationToken // For debugging
+      emailVerificationToken: emailVerificationToken, // For debugging
+      sentFrom: fromEmail
     })
     console.log('Custom email sent successfully.', info.response)
   } catch (mailError) {
