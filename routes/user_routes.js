@@ -266,7 +266,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
     fromEmail = senderEmail
   } else {
     // Use default configuration
-    transporter = nodemailer.createTransporter({
+    transporter = nodemailer.createTransport({
       service: 'Gmail',
       auth: {
         user: process.env.EMAIL_USERNAME,
@@ -357,7 +357,7 @@ router.post('/send-vegvisr-email', async (req, res) => {
     fromEmail = senderEmail
   } else {
     // Use default configuration
-    transporter = nodemailer.createTransporter({
+    transporter = nodemailer.createTransport({
       service: 'Gmail',
       auth: {
         user: process.env.EMAIL_USERNAME,
