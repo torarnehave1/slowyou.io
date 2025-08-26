@@ -323,15 +323,17 @@ router.post('/send-vegvisr-email', async (req, res) => {
   }
 
 
-const emailVerificationToken = crypto.randomBytes(20).toString('hex');
-const completeUrl = `${variables.affiliateRegistrationUrl}&token=${emailVerificationToken}`;
-variables.affiliateRegistrationUrl = completeUrl;
+  const emailVerificationToken = crypto.randomBytes(20).toString('hex');
+  
+  // Only process affiliateRegistrationUrl if variables exists and has the property
+  if (variables && variables.affiliateRegistrationUrl) {
+    const completeUrl = `${variables.affiliateRegistrationUrl}&token=${emailVerificationToken}`;
+    variables.affiliateRegistrationUrl = completeUrl;
+  }
 
   if (!email || !template || !subject) {
     return res.status(400).json({ message: 'Email, template, and subject are required.' })
-  }
-
-  // Log the API call
+  }  // Log the API call
   await logApiCall({
     emailVerificationToken: emailVerificationToken,
     email: email,
