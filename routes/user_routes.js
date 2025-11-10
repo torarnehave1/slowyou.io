@@ -415,4 +415,121 @@ router.post('/send-vegvisr-email', async (req, res) => {
   }
 })
 
+router.post('/send-email-custom-credentials', async (req, res) => {
+  const { senderEmail, toEmail, subject, body } = req.body
+  
+  // Check for API token first
+  const apiToken = req.headers['x-api-token'] || req.headers['x-app-token']
+  
+  if (!apiToken) {
+    return res.status(401).json({ 
+      message: 'API token required. Include X-API-Token or X-App-Token header.' 
+    })
+  }
+  
+  if (apiToken !== process.env.VEGVISR_API_TOKEN) {
+    return res.status(401).json({ 
+      message: 'Invalid API token.' 
+    })
+  }
+  
+  // Get app password from Authorization header
+  const authHeader = req.headers.authorization
+  
+  if (!authHeader || !authHeader.startsWith('Basic ')) {
+    return res.status(401).json({ 
+      message: 'Authorization header required. Use Basic authentication with app password.' 
+    })
+  }
+
+  // Extract app password from Basic auth (format: Basic base64(email:appPassword))
+  let appPassword
+  try {
+    const base64Credentials = authHeader.split(' ')[1]
+    const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8')
+    const [authEmail, authPassword] = credentials.split(':')
+    
+    // Verify that the email in auth matches senderEmail
+    if (authEmail !== senderEmail) {
+      return res.status(401).json({ 
+        message: 'Email in Authorization header must match senderEmail in request body' 
+      })
+    }
+    
+    appPassword = authPassword
+  } catch (error) {
+    return res.status(401).json({ 
+      message: 'Invalid Authorization header format. Use Basic authentication.' 
+    })
+  }
+
+  // Validate required fields
+  if (!senderEmail || !toEmail || !subject || !body) {
+    return res.status(400).json({ 
+      message: 'All fields are required: senderEmail, toEmail, subject, body' 
+    })
+  }
+
+  if (!appPassword) {
+    return res.status(401).json({ 
+      message: 'App password is required in Authorization header' 
+    })
+  }
+
+  // Validate email formats
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(senderEmail)) {
+    return res.status(400).json({ message: 'Invalid sender email format' })
+  }
+  if (!emailRegex.test(toEmail)) {
+    return res.status(400).json({ message: 'Invalid recipient email format' })
+  }
+
+  try {
+    // Create transporter with provided credentials
+    const transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: senderEmail,
+        pass: appPassword,
+      },
+    })
+
+    // Prepare mail options
+    const mailOptions = {
+      from: senderEmail,
+      to: toEmail,
+      subject: subject,
+      html: body,
+    }
+
+    // Send email
+    const info = await transporter.sendMail(mailOptions)
+    
+    // Log successful send
+    console.log('Email sent with custom credentials:', info.response)
+    
+    res.status(200).json({ 
+      message: 'Email sent successfully.',
+      messageId: info.messageId,
+      sentFrom: senderEmail,
+      sentTo: toEmail
+    })
+  } catch (error) {
+    console.error('Error sending email with custom credentials:', error)
+    
+    // Provide more specific error messages
+    if (error.code === 'EAUTH') {
+      return res.status(401).json({ 
+        message: 'Authentication failed. Please check your email and app password.' 
+      })
+    }
+    
+    res.status(500).json({ 
+      message: 'Error sending email.',
+      error: error.message 
+    })
+  }
+})
+
 export default router
