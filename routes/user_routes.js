@@ -445,10 +445,12 @@ router.post('/send-email-custom-credentials', async (req, res) => {
   // Extract app password from Basic auth (format: Basic base64(email:appPassword))
   let appPassword
   const smtpUser = authEmail || senderEmail
+  let authUserFromHeader = null
   try {
     const base64Credentials = authHeader.split(' ')[1]
     const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8')
     const [authEmail, authPassword] = credentials.split(':')
+    authUserFromHeader = authEmail
     
     // Verify that the email in auth matches the SMTP user
     if (authEmail !== smtpUser) {
@@ -504,6 +506,7 @@ router.post('/send-email-custom-credentials', async (req, res) => {
       smtpUser,
       senderEmail,
       authEmail,
+      authUserFromHeader,
       fromEmail: fromEmail || smtpUser,
       toEmail,
       subject,
