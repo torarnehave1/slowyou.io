@@ -91,7 +91,7 @@ Creates a nodemailer transporter for a specific approved sender.
 
 ### 1. Health Check
 
-**Endpoint:** `GET /health`
+**Endpoint:** `GET /api/health`
 
 **Description:** Simple health check endpoint
 
@@ -105,7 +105,7 @@ Creates a nodemailer transporter for a specific approved sender.
 
 ### 2. List Available Senders
 
-**Endpoint:** `GET /available-senders`
+**Endpoint:** `GET /api/available-senders`
 
 **Description:** Lists all approved email senders configured in the system
 
@@ -142,7 +142,7 @@ Authorization: Bearer <VEGVISR_API_TOKEN>
 
 ### 3. Verify Email
 
-**Endpoint:** `GET /verify-email`
+**Endpoint:** `GET /api/verify-email`
 
 **Description:** Verifies a user's email address using a verification token
 
@@ -151,7 +151,7 @@ Authorization: Bearer <VEGVISR_API_TOKEN>
 
 **Example:**
 ```
-GET /verify-email?token=abc123def456
+GET /api/verify-email?token=abc123def456
 ```
 
 **Response Success:**
@@ -175,7 +175,7 @@ GET /verify-email?token=abc123def456
 
 ### 4. Resend Verification Email
 
-**Endpoint:** `POST /resend-verification-email`
+**Endpoint:** `POST /api/resend-verification-email`
 
 **Description:** Resends verification email to a user
 
@@ -223,7 +223,7 @@ Content-Type: application/json
 
 ### 5. Register User (Vegvisr)
 
-**Endpoint:** `POST /reg-user-vegvisr`
+**Endpoint:** `POST /api/reg-user-vegvisr`
 
 **Description:** Registers a new user and sends verification email
 
@@ -275,7 +275,7 @@ Content-Type: application/json
 
 ### 6. Send Custom Vegvisr Email
 
-**Endpoint:** `POST /send-vegvisr-email`
+**Endpoint:** `POST /api/send-vegvisr-email`
 
 **Description:** Sends customizable emails with template variable substitution
 
@@ -344,7 +344,7 @@ Content-Type: application/json
 
 ### 7. Send Email with Custom Credentials
 
-**Endpoint:** `POST /send-email-custom-credentials`
+**Endpoint:** `POST /api/send-email-custom-credentials`
 
 **Description:** Sends an email using custom Gmail credentials provided in the request. This endpoint allows sending emails without pre-configuring the sender in environment variables. Requires both API token and Basic authentication.
 
@@ -573,14 +573,14 @@ Used to store and verify email verification tokens.
 
 ### Example 1: Register New User
 ```bash
-curl -X POST 'https://api.example.com/reg-user-vegvisr?email=user@example.com&role=user' \
+curl -X POST 'https://api.example.com/api/reg-user-vegvisr?email=user@example.com&role=user' \
   -H 'Authorization: Bearer YOUR_API_TOKEN' \
   -H 'Content-Type: application/json'
 ```
 
 ### Example 2: Send Custom Email with Variables
 ```bash
-curl -X POST 'https://api.example.com/send-vegvisr-email' \
+curl -X POST 'https://api.example.com/api/send-vegvisr-email' \
   -H 'Authorization: Bearer YOUR_API_TOKEN' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -595,7 +595,7 @@ curl -X POST 'https://api.example.com/send-vegvisr-email' \
 
 ### Example 3: Verify Email
 ```bash
-curl 'https://api.example.com/verify-email?token=VERIFICATION_TOKEN'
+curl 'https://api.example.com/api/verify-email?token=VERIFICATION_TOKEN'
 ```
 
 ### Example 4: Send Email with Custom Credentials
