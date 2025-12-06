@@ -499,6 +499,20 @@ router.post('/send-email-custom-credentials', async (req, res) => {
       },
     })
 
+    const redactedPass = appPassword ? `${appPassword.slice(0, 2)}***${appPassword.slice(-2)}` : 'none'
+    console.log('[send-email-custom-credentials] request', {
+      smtpUser,
+      senderEmail,
+      authEmail,
+      fromEmail: fromEmail || smtpUser,
+      toEmail,
+      subject,
+      apiTokenPresent: !!apiToken,
+      authHeaderPresent: !!authHeader,
+      appPasswordLength: appPassword ? appPassword.length : 0,
+      appPasswordRedacted: redactedPass,
+    })
+
     // Prepare mail options
     const mailOptions = {
       from: fromEmail || smtpUser,
@@ -507,11 +521,24 @@ router.post('/send-email-custom-credentials', async (req, res) => {
       html: body,
     }
 
+    console.log('[send-email-custom-credentials] mailOptions', {
+      from: mailOptions.from,
+      to: mailOptions.to,
+      subject: mailOptions.subject,
+      htmlLength: mailOptions.html ? mailOptions.html.length : 0,
+    })
+
     // Send email
     const info = await transporter.sendMail(mailOptions)
     
     // Log successful send
-    console.log('Email sent with custom credentials:', info.response)
+    console.log('[send-email-custom-credentials] success', {
+      response: info.response,
+      messageId: info.messageId,
+      envelope: info.envelope,
+      accepted: info.accepted,
+      rejected: info.rejected,
+    })
     
     res.status(200).json({ 
       message: 'Email sent successfully.',
