@@ -416,7 +416,7 @@ router.post('/send-vegvisr-email', async (req, res) => {
 })
 
 router.post('/send-email-custom-credentials', async (req, res) => {
-  const { senderEmail, toEmail, subject, body } = req.body
+  const { senderEmail, authEmail, fromEmail, toEmail, subject, body } = req.body
   
   // Check for API token first
   const apiToken = req.headers['x-api-token'] || req.headers['x-app-token']
@@ -444,15 +444,16 @@ router.post('/send-email-custom-credentials', async (req, res) => {
 
   // Extract app password from Basic auth (format: Basic base64(email:appPassword))
   let appPassword
+  const smtpUser = authEmail || senderEmail
   try {
     const base64Credentials = authHeader.split(' ')[1]
     const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8')
     const [authEmail, authPassword] = credentials.split(':')
     
-    // Verify that the email in auth matches senderEmail
-    if (authEmail !== senderEmail) {
+    // Verify that the email in auth matches the SMTP user
+    if (authEmail !== smtpUser) {
       return res.status(401).json({ 
-        message: 'Email in Authorization header must match senderEmail in request body' 
+        message: 'Email in Authorization header must match authEmail/senderEmail in request body' 
       })
     }
     
@@ -464,9 +465,9 @@ router.post('/send-email-custom-credentials', async (req, res) => {
   }
 
   // Validate required fields
-  if (!senderEmail || !toEmail || !subject || !body) {
+  if (!smtpUser || !toEmail || !subject || !body) {
     return res.status(400).json({ 
-      message: 'All fields are required: senderEmail, toEmail, subject, body' 
+      message: 'All fields are required: senderEmail (or authEmail), toEmail, subject, body' 
     })
   }
 
@@ -478,11 +479,14 @@ router.post('/send-email-custom-credentials', async (req, res) => {
 
   // Validate email formats
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(senderEmail)) {
+  if (!emailRegex.test(smtpUser)) {
     return res.status(400).json({ message: 'Invalid sender email format' })
   }
   if (!emailRegex.test(toEmail)) {
     return res.status(400).json({ message: 'Invalid recipient email format' })
+  }
+  if (fromEmail && !emailRegex.test(fromEmail)) {
+    return res.status(400).json({ message: 'Invalid from email format' })
   }
 
   try {
@@ -490,14 +494,14 @@ router.post('/send-email-custom-credentials', async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: 'Gmail',
       auth: {
-        user: senderEmail,
+        user: smtpUser,
         pass: appPassword,
       },
     })
 
     // Prepare mail options
     const mailOptions = {
-      from: senderEmail,
+      from: fromEmail || smtpUser,
       to: toEmail,
       subject: subject,
       html: body,
@@ -512,7 +516,7 @@ router.post('/send-email-custom-credentials', async (req, res) => {
     res.status(200).json({ 
       message: 'Email sent successfully.',
       messageId: info.messageId,
-      sentFrom: senderEmail,
+      sentFrom: fromEmail || smtpUser,
       sentTo: toEmail
     })
   } catch (error) {
