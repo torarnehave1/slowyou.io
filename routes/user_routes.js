@@ -307,6 +307,84 @@ router.post('/reg-user-vegvisr', async (req, res) => {
   }
 })
 
+router.post('/onboarding', async (req, res) => {
+  const email = req.query.email
+  const role = req.query.role || 'user'
+  const senderEmail = req.body.senderEmail || req.query.senderEmail
+  const authHeader = req.headers.authorization
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send('Unauthorized')
+  }
+
+  const token = authHeader.split(' ')[1]
+
+  if (token !== process.env.VEGVISR_API_TOKEN) {
+    console.log('Unauthorized access attempt', token)
+    return res.status(401).send('Unauthorized')
+  }
+
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required.' })
+  }
+
+  const magicCode = crypto.randomInt(0, 1000000).toString().padStart(6, '0')
+
+  await logApiCall({
+    emailVerificationToken: magicCode,
+    email: email,
+    role: role,
+    endpoint: '/onboarding',
+    method: 'POST',
+    params: req.body,
+    headers: req.headers,
+    timestamp: new Date(),
+  })
+
+  let transporter
+  let fromEmail = 'vegvisr.org@gmail.com' // default
+
+  if (senderEmail) {
+    if (!isApprovedSender(senderEmail)) {
+      return res.status(400).json({ message: `Sender '${senderEmail}' not found in approved list` })
+    }
+    transporter = createTransporterForSender(senderEmail)
+    fromEmail = senderEmail
+  } else {
+    transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    })
+  }
+
+  const template = emailTemplates.emailvegvisrorg.verification
+
+  const mailOptions = {
+    from: fromEmail,
+    to: email,
+    cc: 'slowyou.net@gmail.com',
+    subject: template.subject,
+    html: template.body.replace(
+      '{verificationLink}',
+      `https://test.vegvisr.org/verify-email?token=${magicCode}`,
+    ),
+  }
+
+  try {
+    const info = await transporter.sendMail(mailOptions)
+    res.status(200).json({
+      message: 'Onboarding verification email sent successfully.',
+      sentFrom: fromEmail
+    })
+    console.log('Onboarding verification email sent successfully.', info.response)
+  } catch (mailError) {
+    res.status(500).json({ message: 'Error sending onboarding verification email.' })
+  }
+})
+
 router.post('/send-vegvisr-email', async (req, res) => {
   const { email, template, subject, callbackUrl, variables, senderEmail } = req.body
   const authHeader = req.headers.authorization
