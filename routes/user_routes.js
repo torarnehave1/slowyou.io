@@ -308,9 +308,11 @@ router.post('/reg-user-vegvisr', async (req, res) => {
 })
 
 router.post('/onboarding', async (req, res) => {
-  const email = req.query.email
+  const email = req.body.email || req.query.email
   const role = req.query.role || 'user'
   const senderEmail = req.body.senderEmail || req.query.senderEmail
+  const magicLink = req.body.magicLinkUrl || req.body.magicLink || req.query.magicLink
+  const inboundToken = req.body.token
   const authHeader = req.headers.authorization
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -328,7 +330,14 @@ router.post('/onboarding', async (req, res) => {
     return res.status(400).json({ message: 'Email is required.' })
   }
 
-  const magicCode = crypto.randomInt(0, 1000000).toString().padStart(6, '0')
+  const magicCode =
+    typeof inboundToken === 'string' && inboundToken.trim().length > 0
+      ? inboundToken.trim()
+      : crypto.randomInt(0, 1000000).toString().padStart(6, '0')
+  const verificationLink =
+    typeof magicLink === 'string' && magicLink.trim().length > 0
+      ? magicLink.trim()
+      : `https://test.vegvisr.org/verify-email?token=${magicCode}`
 
   await logApiCall({
     emailVerificationToken: magicCode,
@@ -372,7 +381,7 @@ router.post('/onboarding', async (req, res) => {
           Click this link to verify it is you and start the onboarding process:
         </p>
         <p style="margin: 0 0 16px;">
-          <a href="https://test.vegvisr.org/verify-email?token=${magicCode}" style="color: #1a73e8;">
+          <a href="${verificationLink}" style="color: #1a73e8;">
             Verify and start onboarding
           </a>
         </p>
