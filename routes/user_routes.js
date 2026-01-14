@@ -360,17 +360,27 @@ router.post('/onboarding', async (req, res) => {
     })
   }
 
-  const template = emailTemplates.emailvegvisrorg.verification
-
   const mailOptions = {
     from: fromEmail,
     to: email,
     cc: 'slowyou.net@gmail.com',
-    subject: template.subject,
-    html: template.body.replace(
-      '{verificationLink}',
-      `https://test.vegvisr.org/verify-email?token=${magicCode}`,
-    ),
+    subject: 'Verify your email to start onboarding',
+    html: `
+      <div style="font-family: Arial, Helvetica, sans-serif; line-height: 1.5; color: #222;">
+        <h2 style="margin: 0 0 12px; font-size: 20px;">Verify your email</h2>
+        <p style="margin: 0 0 12px;">
+          Click this link to verify it is you and start the onboarding process:
+        </p>
+        <p style="margin: 0 0 16px;">
+          <a href="https://test.vegvisr.org/verify-email?token=${magicCode}" style="color: #1a73e8;">
+            Verify and start onboarding
+          </a>
+        </p>
+        <p style="margin: 0; font-size: 12px; color: #666;">
+          If you did not request this, you can ignore this email.
+        </p>
+      </div>
+    `,
   }
 
   try {
