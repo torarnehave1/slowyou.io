@@ -51,6 +51,26 @@ function createTransporterForSender(email) {
   })
 }
 
+function buildOnboardingSummaryHtml(summary) {
+  if (!summary || typeof summary !== 'object') {
+    return '<p style="margin: 0; color: #666;">No details provided.</p>'
+  }
+
+  const rows = Object.entries(summary)
+    .map(([key, value]) => {
+      const safeKey = String(key)
+      const displayValue = Array.isArray(value) ? value.join(', ') : String(value ?? '').trim()
+      if (!displayValue) return ''
+      return `<li><strong>${safeKey}:</strong> ${displayValue}</li>`
+    })
+    .filter(Boolean)
+    .join('')
+
+  return rows
+    ? `<ul style="margin: 0; padding-left: 18px; color: #222;">${rows}</ul>`
+    : '<p style="margin: 0; color: #666;">No details provided.</p>'
+}
+
 // Middleware to validate Content-Type and handle JSON parsing errors
 router.use((req, res, next) => {
   if (req.method === 'POST' || req.method === 'PUT') {
@@ -401,6 +421,103 @@ router.post('/onboarding', async (req, res) => {
     console.log('Onboarding verification email sent successfully.', info.response)
   } catch (mailError) {
     res.status(500).json({ message: 'Error sending onboarding verification email.' })
+  }
+})
+
+router.post('/onboarding-review', async (req, res) => {
+  const email = req.body.email || req.query.email
+  const reviewLink = req.body.reviewLink || req.query.reviewLink
+  const summaryHtml = req.body.summaryHtml
+  const summary = req.body.summary
+  const version = req.body.version
+  const submittedAt = req.body.submittedAt
+  const reviewToken = req.body.reviewToken
+  const senderEmail = req.body.senderEmail || req.query.senderEmail
+  const authHeader = req.headers.authorization
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).send('Unauthorized')
+  }
+
+  const token = authHeader.split(' ')[1]
+
+  if (token !== process.env.VEGVISR_API_TOKEN) {
+    console.log('Unauthorized access attempt', token)
+    return res.status(401).send('Unauthorized')
+  }
+
+  if (!email || !reviewLink) {
+    return res.status(400).json({ message: 'Email and reviewLink are required.' })
+  }
+
+  await logApiCall({
+    emailVerificationToken: reviewToken || 'review',
+    email: email,
+    role: 'user',
+    endpoint: '/onboarding-review',
+    method: 'POST',
+    params: req.body,
+    headers: req.headers,
+    timestamp: new Date(),
+  })
+
+  let transporter
+  let fromEmail = 'vegvisr.org@gmail.com'
+
+  if (senderEmail) {
+    if (!isApprovedSender(senderEmail)) {
+      return res.status(400).json({ message: `Sender '${senderEmail}' not found in approved list` })
+    }
+    transporter = createTransporterForSender(senderEmail)
+    fromEmail = senderEmail
+  } else {
+    transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    })
+  }
+
+  const subjectVersion = version ? ` (v${version})` : ''
+  const htmlSummary = summaryHtml || buildOnboardingSummaryHtml(summary)
+
+  const mailOptions = {
+    from: fromEmail,
+    to: email,
+    cc: 'slowyou.net@gmail.com',
+    subject: `Review your Vegvisr onboarding${subjectVersion}`,
+    html: `
+      <div style="font-family: Arial, Helvetica, sans-serif; line-height: 1.5; color: #222;">
+        <h2 style="margin: 0 0 12px; font-size: 20px;">Review your onboarding responses</h2>
+        <p style="margin: 0 0 12px;">
+          Submitted at: ${submittedAt || 'Recently'}
+        </p>
+        <div style="margin: 12px 0 18px;">
+          ${htmlSummary}
+        </div>
+        <p style="margin: 0 0 16px;">
+          <a href="${reviewLink}" style="color: #1a73e8;">
+            Review or update your answers
+          </a>
+        </p>
+        <p style="margin: 0; font-size: 12px; color: #666;">
+          If you did not request this, you can ignore this email.
+        </p>
+      </div>
+    `,
+  }
+
+  try {
+    const info = await transporter.sendMail(mailOptions)
+    res.status(200).json({
+      message: 'Onboarding review email sent successfully.',
+      sentFrom: fromEmail
+    })
+    console.log('Onboarding review email sent successfully.', info.response)
+  } catch (mailError) {
+    res.status(500).json({ message: 'Error sending onboarding review email.' })
   }
 })
 
