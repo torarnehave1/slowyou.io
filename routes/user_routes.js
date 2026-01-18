@@ -71,6 +71,25 @@ function buildOnboardingSummaryHtml(summary) {
     : '<p style="margin: 0; color: #666;">No details provided.</p>'
 }
 
+const DEFAULT_LOGIN_BASE_URL = process.env.LOGIN_VERIFY_URL || 'https://login.vegvisr.org'
+const DEFAULT_LOGIN_REDIRECT_URL =
+  process.env.LOGIN_REDIRECT_URL || 'https://aichat.vegvisr.org'
+const LOGIN_LINK_EXPIRY_MINUTES = Number.parseInt(
+  process.env.LOGIN_LINK_EXPIRY_MINUTES || '30',
+  10,
+)
+
+const appendQueryParam = (url, key, value) => {
+  try {
+    const parsed = new URL(url)
+    parsed.searchParams.set(key, value)
+    return parsed.toString()
+  } catch {
+    const separator = url.includes('?') ? '&' : '?'
+    return `${url}${separator}${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+  }
+}
+
 // Middleware to validate Content-Type and handle JSON parsing errors
 router.use((req, res, next) => {
   if (req.method === 'POST' || req.method === 'PUT') {
@@ -172,6 +191,7 @@ router.get('/verify-email', async (req, res) => {
 router.post('/resend-verification-email', async (req, res) => {
   const email = req.query.email
   const senderEmail = req.body.senderEmail || req.query.senderEmail
+  const redirectUrl = req.body.redirectUrl || req.query.redirectUrl || DEFAULT_LOGIN_REDIRECT_URL
   const authHeader = req.headers.authorization
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -225,7 +245,9 @@ router.post('/resend-verification-email', async (req, res) => {
     subject: emailTemplates.emailvegvisrorg.verification.subject,
     html: emailTemplates.emailvegvisrorg.verification.body.replace(
       '{verificationLink}',
-      `https://test.vegvisr.org/verify-email?token=${emailVerificationToken.emailVerificationToken}`,
+      `${DEFAULT_LOGIN_BASE_URL}?magic=${encodeURIComponent(
+        emailVerificationToken.emailVerificationToken,
+      )}&redirect=${encodeURIComponent(redirectUrl)}`,
     ),
   }
 
@@ -247,6 +269,7 @@ router.post('/reg-user-vegvisr', async (req, res) => {
   const email = req.query.email
   const role = req.query.role || 'user'
   const senderEmail = req.body.senderEmail || req.query.senderEmail
+  const redirectUrl = req.body.redirectUrl || req.query.redirectUrl || DEFAULT_LOGIN_REDIRECT_URL
   const authHeader = req.headers.authorization
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -309,7 +332,9 @@ router.post('/reg-user-vegvisr', async (req, res) => {
     subject: template.subject,
     html: template.body.replace(
       '{verificationLink}',
-      `https://test.vegvisr.org/verify-email?token=${emailVerificationToken}`,
+      `${DEFAULT_LOGIN_BASE_URL}?magic=${encodeURIComponent(
+        emailVerificationToken,
+      )}&redirect=${encodeURIComponent(redirectUrl)}`,
     ),
   }
 
@@ -778,6 +803,109 @@ router.post('/send-email-custom-credentials', async (req, res) => {
       error: error.message 
     })
   }
+})
+
+router.post('/login/magic/send', async (req, res) => {
+  const { email, redirectUrl, senderEmail } = req.body || {}
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required.' })
+  }
+
+  const token = crypto.randomBytes(20).toString('hex')
+  const loginRedirect =
+    redirectUrl ||
+    `${DEFAULT_LOGIN_BASE_URL}?redirect=${encodeURIComponent(DEFAULT_LOGIN_REDIRECT_URL)}`
+  const verificationLink = appendQueryParam(loginRedirect, 'magic', token)
+
+  await logApiCall({
+    emailVerificationToken: token,
+    email: email,
+    role: 'user',
+    endpoint: '/login/magic/send',
+    method: 'POST',
+    params: req.body,
+    headers: req.headers,
+    timestamp: new Date(),
+  })
+
+  let transporter
+  let fromEmail = 'vegvisr.org@gmail.com'
+
+  if (senderEmail) {
+    if (!isApprovedSender(senderEmail)) {
+      return res.status(400).json({ error: `Sender '${senderEmail}' not found in approved list` })
+    }
+    transporter = createTransporterForSender(senderEmail)
+    fromEmail = senderEmail
+  } else {
+    transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    })
+  }
+
+  const mailOptions = {
+    from: fromEmail,
+    to: email,
+    cc: 'slowyou.net@gmail.com',
+    subject: 'Sign in to Vegvisr',
+    html: `
+      <div style="font-family: Arial, Helvetica, sans-serif; line-height: 1.5; color: #222;">
+        <h2 style="margin: 0 0 12px; font-size: 20px;">Sign in to Vegvisr</h2>
+        <p style="margin: 0 0 12px;">
+          Click the button below to finish signing in. This link expires in ${LOGIN_LINK_EXPIRY_MINUTES} minutes.
+        </p>
+        <p style="margin: 0 0 16px;">
+          <a href="${verificationLink}" style="display: inline-block; padding: 12px 20px; background: #2563eb; color: #fff; border-radius: 10px; text-decoration: none;">
+            Continue to Vegvisr
+          </a>
+        </p>
+        <p style="margin: 0; font-size: 12px; color: #666;">
+          If you did not request this, you can ignore this email.
+        </p>
+        <p style="margin: 12px 0 0; font-size: 12px; color: #666;">
+          Link: <a href="${verificationLink}" style="color: #2563eb;">${verificationLink}</a>
+        </p>
+      </div>
+    `,
+  }
+
+  try {
+    const info = await transporter.sendMail(mailOptions)
+    res.status(200).json({ success: true, sentFrom: fromEmail })
+    console.log('Magic link email sent successfully.', info.response)
+  } catch (mailError) {
+    res.status(500).json({ error: 'Error sending magic link email.' })
+  }
+})
+
+router.get('/login/magic/verify', async (req, res) => {
+  const token = req.query.token
+
+  if (!token) {
+    return res.status(400).json({ error: 'Token is required.' })
+  }
+
+  const emailVerificationToken = await EmailVerificationToken.findOne({
+    emailVerificationToken: token,
+  })
+
+  if (!emailVerificationToken) {
+    return res.status(404).json({ error: 'Token not found.' })
+  }
+
+  emailVerificationToken.verified = true
+  await emailVerificationToken.save()
+
+  res.status(200).json({
+    success: true,
+    email: emailVerificationToken.email,
+    token: token,
+  })
 })
 
 export default router
