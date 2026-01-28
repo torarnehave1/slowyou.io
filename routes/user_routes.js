@@ -73,7 +73,7 @@ function buildOnboardingSummaryHtml(summary) {
 
 const DEFAULT_LOGIN_BASE_URL = process.env.LOGIN_VERIFY_URL || 'https://login.vegvisr.org'
 const DEFAULT_LOGIN_REDIRECT_URL =
-  process.env.LOGIN_REDIRECT_URL || 'https://aichat.vegvisr.org'
+  process.env.LOGIN_REDIRECT_URL || 'https://login.vegvisr.org'
 const LOGIN_LINK_EXPIRY_MINUTES = Number.parseInt(
   process.env.LOGIN_LINK_EXPIRY_MINUTES || '30',
   10,
