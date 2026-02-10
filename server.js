@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import userRoutes from './routes/user_routes.js';
 import githubRoutes from './routes/github_route.js';
+import smtpRoutes from './routes/smtp_routes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import {connect}   from 'mongoose';
@@ -31,6 +32,7 @@ connect(process.env.MONGO_DB_URL)
 // Mount your auth routes (adjust the path as needed)
 app.use('/api', userRoutes);
 app.use('/api/github', githubRoutes);
+app.use('/api/smtp', smtpRoutes);
 
 
 app.get('/', (req, res) => {
