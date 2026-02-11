@@ -43,18 +43,18 @@ router.post('/send-domain-email', async (req, res) => {
     return res.status(401).send('Unauthorized')
   }
 
-  const { from, to, subject, text, html, replyTo, smtpUser, smtpPass } = req.body || {}
+  const { from, to, subject, text, html, replyTo } = req.body || {}
 
   if (!from || !to || !subject) {
     return res.status(400).json({ message: 'from, to, subject are required' })
   }
 
-  // Per-user SMTP credentials from request body, fall back to env vars
-  const user = smtpUser || process.env.SMTP_RELAY_USER
-  const pass = smtpPass || process.env.SMTP_RELAY_PASS
+  // Always use the single Postfix system account from env vars
+  const user = process.env.SMTP_RELAY_USER
+  const pass = process.env.SMTP_RELAY_PASS
 
   if (!user || !pass) {
-    return res.status(400).json({ message: 'SMTP credentials required (smtpUser/smtpPass or server env)' })
+    return res.status(400).json({ message: 'SMTP_RELAY_USER and SMTP_RELAY_PASS must be set in server env' })
   }
 
   try {
