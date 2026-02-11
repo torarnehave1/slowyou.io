@@ -6,15 +6,15 @@ dotenv.config()
 
 const router = express.Router()
 
-function createTransporterViaPostfix() {
+function createTransporterViaPostfix(smtpUser, smtpPass) {
   return nodemailer.createTransport({
     host: process.env.SMTP_RELAY_HOST || 'smtp.vegvisr.org',
     port: Number(process.env.SMTP_RELAY_PORT || 587),
     secure: false,
     requireTLS: true,
     auth: {
-      user: process.env.SMTP_RELAY_USER,
-      pass: process.env.SMTP_RELAY_PASS,
+      user: smtpUser,
+      pass: smtpPass,
     },
     tls: {
       servername: process.env.SMTP_RELAY_HOST || 'smtp.vegvisr.org',
@@ -43,16 +43,24 @@ router.post('/send-domain-email', async (req, res) => {
     return res.status(401).send('Unauthorized')
   }
 
-  const { from, to, subject, text, html, replyTo } = req.body || {}
+  const { from, to, subject, text, html, replyTo, smtpUser, smtpPass } = req.body || {}
 
   if (!from || !to || !subject) {
     return res.status(400).json({ message: 'from, to, subject are required' })
   }
 
+  // Per-user SMTP credentials from request body, fall back to env vars
+  const user = smtpUser || process.env.SMTP_RELAY_USER
+  const pass = smtpPass || process.env.SMTP_RELAY_PASS
+
+  if (!user || !pass) {
+    return res.status(400).json({ message: 'SMTP credentials required (smtpUser/smtpPass or server env)' })
+  }
+
   try {
     assertFromDomainAllowed(from)
 
-    const transporter = createTransporterViaPostfix()
+    const transporter = createTransporterViaPostfix(user, pass)
 
     const info = await transporter.sendMail({
       from,
