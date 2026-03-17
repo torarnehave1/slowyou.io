@@ -23,11 +23,13 @@ function createTransporterViaPostfix(smtpUser, smtpPass) {
 }
 
 function assertFromDomainAllowed(from) {
-  const allowedDomain = process.env.SMTP_RELAY_FROM_DOMAIN || 'vegvisr.org'
+  const domainsRaw = process.env.SMTP_RELAY_ALLOWED_DOMAINS || process.env.SMTP_RELAY_FROM_DOMAIN || 'vegvisr.org'
+  const allowedDomains = domainsRaw.split(',').map(d => d.trim().toLowerCase()).filter(Boolean)
   const m = String(from || '').match(/<([^>]+)>/)
   const addr = (m ? m[1] : from || '').trim().toLowerCase()
-  if (!addr.endsWith(`@${allowedDomain}`)) {
-    throw new Error(`from must be @${allowedDomain}`)
+  const fromDomain = addr.split('@')[1] || ''
+  if (!allowedDomains.includes(fromDomain)) {
+    throw new Error(`from domain @${fromDomain} not allowed. Allowed: ${allowedDomains.map(d => '@' + d).join(', ')}`)
   }
 }
 
