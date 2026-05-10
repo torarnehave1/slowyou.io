@@ -1,3 +1,4 @@
 .env
 hist.md
 *.md
+node_modules
